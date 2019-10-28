@@ -1,6 +1,9 @@
 #include "qtsglwidget.h"
 
-QtSGLWidget::QtSGLWidget(QWidget* parent):QGLWidget(parent){}
+QtSGLWidget::QtSGLWidget(QWidget* parent):QGLWidget(parent)
+{
+
+}
 
 void QtSGLWidget::initializeGL()
 {
@@ -13,7 +16,7 @@ void QtSGLWidget::initializeGL()
     glShadeModel(GL_SMOOTH);    // 启用阴影平滑
 
     // 清屏
-    glClearColor(0.0, 0.0, 0.1, 0.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
 
     glClearDepth(1.0);          // 设置深度缓存
     glEnable(GL_DEPTH_TEST);    // 启用深度测试
@@ -23,6 +26,12 @@ void QtSGLWidget::initializeGL()
     // glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     // 如果OpenGL不能有效的支持透视修正参数差值，那么GL_DONT_CARE 和 GL_FASTEST可以执行颜色、纹理坐标的简单线性差值计算
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+    glLightfv( GL_LIGHT1, GL_AMBIENT, lightAmbient );       // 设置环境光的发光量
+    glLightfv( GL_LIGHT1, GL_DIFFUSE, lightDiffuse );       // 设置漫射光的发光量
+    glLightfv( GL_LIGHT1, GL_POSITION, lightPosition );     // 设置光源的位置
+
+    glEnable( GL_LIGHT1 );                                  // 启用一号光源
 
 }
 
@@ -48,10 +57,10 @@ void QtSGLWidget::paintGL()
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );   // 清除屏幕和深度缓存
     glLoadIdentity();                                       // 重置当前观察矩阵
 
-    glTranslatef( 0.0,  0.0, -6.0 );                        // 相当于 以中心为参考点 移动画笔位置
+    glTranslatef( 0.0,  0.0, zoom );                        // 相当于 以中心为参考点 移动画笔位置
 
     // 旋转
-    xRot += 45;
+//    xRot += 45;
     glRotatef( xRot,  1.0,  0.0,  0.0 );
     glRotatef( yRot,  0.0,  1.0,  0.0 );
     glRotatef( zRot,  0.0,  0.0,  1.0 );
@@ -62,7 +71,7 @@ void QtSGLWidget::paintGL()
     glBegin( GL_QUADS  );                                // 开始绘制  参数为要绘制的目标
 
     // 正方形 前面
-
+    glNormal3f(0.0f, 0.0f, 1.0f);
 //    glColor3f( 0.6, 0.2, 0.2 );                             // 填充颜色
     glTexCoord2f(0.0, 1.0 );glVertex3f( -1.0,   1.0,  1.0 );                         // 确定端点
 
@@ -77,10 +86,12 @@ void QtSGLWidget::paintGL()
 
     glEnd();
 
+
     glBindTexture( GL_TEXTURE_2D, texture[1] );
 
     glBegin( GL_QUADS );
     // 正方形 后面
+    glNormal3f(0.0f, 0.0f, -1.0f);
 //    glColor3f( 0.6, 0.2, 0.2 );
     glTexCoord2f(0.0, 1.0 );glVertex3f(  1.0,   1.0, -1.0 );
 
@@ -94,6 +105,7 @@ void QtSGLWidget::paintGL()
     glTexCoord2f( 0.0, 0.0 );glVertex3f(  1.0,  -1.0, -1.0 );
 
     // 正方形 左面
+    glNormal3f(-1.0f, 0.0f, 0.0f);
 //    glColor3f( 0.6, 0.2, 0.2 );
     glTexCoord2f(0.0, 1.0 );glVertex3f( -1.0,   1.0, -1.0 );
 
@@ -107,6 +119,7 @@ void QtSGLWidget::paintGL()
     glTexCoord2f( 0.0, 0.0 );glVertex3f( -1.0,  -1.0, -1.0 );
 
     // 正方形 右面
+    glNormal3f(1.0f, 0.0f, 0.0f);
 //    glColor3f( 0.6, 0.2, 0.2 );
     glTexCoord2f(0.0, 1.0 );glVertex3f(  1.0,   1.0,  1.0 );
 
@@ -120,6 +133,7 @@ void QtSGLWidget::paintGL()
     glTexCoord2f( 0.0, 0.0 );glVertex3f(  1.0,  -1.0,  1.0 );
 
     // 正方形 上面
+    glNormal3f(0.0f, 1.0f, 0.0f);
 //    glColor3f( 0.6, 0.2, 0.2 );
     glTexCoord2f(0.0, 1.0 );glVertex3f( -1.0,   1.0, -1.0 );
 
@@ -133,6 +147,7 @@ void QtSGLWidget::paintGL()
     glTexCoord2f( 0.0, 0.0 );glVertex3f( -1.0,   1.0,  1.0 );
 
     // 正方形 下面
+    glNormal3f(0.0f, -1.0f, 0.0f);
 //    glColor3f( 0.6, 0.2, 0.2 );
     glTexCoord2f(0.0, 1.0 );glVertex3f( -1.0,  -1.0,  1.0 );
 
@@ -178,3 +193,129 @@ void QtSGLWidget::loadGLTextures()
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 }
+
+
+void QtSGLWidget::keyPressEvent( QKeyEvent *e )
+{
+    switch ( e->key() )
+    {
+
+    case Qt::Key_W:   // 按下了w键，将木箱移向屏幕内部。
+        zoom -= 0.2;
+        //        qDebug()<< " w " << endl;
+        updateGL();
+        break;
+
+
+    case Qt::Key_S:   // 按下了s键，将木箱移向屏幕外部。
+        zoom += 0.2;
+        //        qDebug()<< " s " << endl;
+        updateGL();
+        break;
+
+    case Qt::Key_Up:  // 按下了Up方向键，向上旋转。
+        xRot -= 2.00;
+        //        qDebug()<< " up " << endl;
+        updateGL();
+        break;
+
+    case Qt::Key_Down:// 按下了Dowm方向键，向下旋转。
+        xRot += 2.00;
+        //        qDebug()<< " down " << endl;
+        updateGL();
+        break;
+
+
+    case Qt::Key_Right:// 按下了Right方向键，向右旋转。
+        yRot += 2.00;
+        //        qDebug()<< " Right " << endl;
+        updateGL();
+        break;
+
+    case Qt::Key_Left:// 按下了Left方向键，向左旋转。
+        yRot -= 2.00;
+        //        qDebug()<< "left " << endl;
+        updateGL();
+        break;
+
+    case Qt::Key_Escape:
+        close();
+    }
+}
+
+
+void QtSGLWidget::keyReleaseEvent( QKeyEvent *e )
+{
+
+}
+
+
+//鼠标点击事件
+void QtSGLWidget::mousePressEvent(QMouseEvent* event)
+{
+    //记录鼠标的世界坐标.
+    m_startPoint = event->globalPos();
+
+    if (event->button() == Qt::RightButton)
+    {
+        moveXRot = xRot;
+        moveYRot = yRot;
+    }
+
+    //当鼠标左键点击时.
+    if (event->button() == Qt::LeftButton)
+    {
+        setFocus();
+        m_move = true;
+
+        //记录窗体的世界坐标.
+        m_windowPoint = this->parentWidget()->frameGeometry().topLeft();
+    }
+}
+
+//鼠标移动事件
+void QtSGLWidget::mouseMoveEvent(QMouseEvent *event)
+{
+//    if ((QApplication::keyboardModifiers() == Qt::ControlModifier) && (event->button() == Qt::LeftButton))
+    if(event->buttons() & Qt::RightButton)
+    {
+         QPoint relativePos = event->globalPos() - m_startPoint;
+         yRot = moveYRot + relativePos.x();
+         xRot = moveXRot + relativePos.y();
+         updateGL();
+    }
+    else if ((event->buttons() & Qt::LeftButton))
+    {
+        //移动中的鼠标位置相对于初始位置的相对位置.
+        QPoint relativePos = event->globalPos() - m_startPoint;
+        //然后移动窗体即可.
+        this->parentWidget()->move(m_windowPoint + relativePos );
+    }
+}
+
+void QtSGLWidget::wheelEvent(QWheelEvent*event)
+{
+    if(event->delta()>0)
+    {
+        zoom += 0.2;
+        updateGL();
+    }
+
+    if(event->delta()<0)
+    {
+        zoom -= 0.2;
+        updateGL();
+    }
+}
+
+//鼠标释放事件
+void QtSGLWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        //改变移动状态.
+        m_move = false;
+    }
+}
+
+

@@ -20,6 +20,11 @@ public:
 private:
     Ui::MainWindow *ui;
     QtSGLWidget *gl;
+
+private:
+
+
+
 };
 
 #endif // MAINWINDOW_H
