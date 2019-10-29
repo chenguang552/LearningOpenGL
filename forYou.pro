@@ -28,11 +28,13 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-        qtsglwidget.cpp
+        qtsglwidget.cpp \
+        widgetmovethread.cpp
 
 HEADERS += \
         mainwindow.h \
-        qtsglwidget.h
+        qtsglwidget.h \
+        widgetmovethread.h
 
 FORMS += \
         mainwindow.ui

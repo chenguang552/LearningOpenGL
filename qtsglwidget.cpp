@@ -2,7 +2,10 @@
 
 QtSGLWidget::QtSGLWidget(QWidget* parent):QGLWidget(parent)
 {
+    widgetmovethread *wgmt = new widgetmovethread();
+    wgmt->start();
 
+    connect(wgmt,SIGNAL( moveToPos(int,int)),this, SLOT(moveWidget(int, int)));
 }
 
 void QtSGLWidget::initializeGL()
@@ -16,7 +19,7 @@ void QtSGLWidget::initializeGL()
     glShadeModel(GL_SMOOTH);    // 启用阴影平滑
 
     // 清屏
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
 
     glClearDepth(1.0);          // 设置深度缓存
     glEnable(GL_DEPTH_TEST);    // 启用深度测试
@@ -33,6 +36,8 @@ void QtSGLWidget::initializeGL()
 
     glEnable( GL_LIGHT1 );                                  // 启用一号光源
 
+    glColor4f( 1.0, 1.0, 1.0, 0.8 );                        // 全亮度 80%透明度绘制
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE );                    // 融合类型
 }
 
 void QtSGLWidget::resizeGL(int w, int h)
@@ -199,6 +204,32 @@ void QtSGLWidget::keyPressEvent( QKeyEvent *e )
 {
     switch ( e->key() )
     {
+    case Qt::Key_L:
+        light = !light;
+        if ( !light )
+        {
+            glDisable( GL_LIGHTING );
+        }
+        else
+        {
+            glEnable( GL_LIGHTING );
+        }
+        updateGL();
+        break;
+    case Qt::Key_B:
+        blend = !blend;
+        if ( blend )
+        {
+            glEnable( GL_BLEND );
+            glDisable( GL_DEPTH_TEST );
+        }
+        else
+        {
+            glDisable( GL_BLEND );
+            glEnable( GL_DEPTH_TEST );
+        }
+        updateGL();
+        break;
 
     case Qt::Key_W:   // 按下了w键，将木箱移向屏幕内部。
         zoom -= 0.2;
@@ -276,6 +307,7 @@ void QtSGLWidget::mousePressEvent(QMouseEvent* event)
 //鼠标移动事件
 void QtSGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
+//    qDebug() << "x: " << event->globalPos().x() << "  y: " << event->globalPos().y();
 //    if ((QApplication::keyboardModifiers() == Qt::ControlModifier) && (event->button() == Qt::LeftButton))
     if(event->buttons() & Qt::RightButton)
     {
@@ -318,4 +350,17 @@ void QtSGLWidget::mouseReleaseEvent(QMouseEvent *event)
     }
 }
 
+void QtSGLWidget::moveWidget(int x,int y){
 
+
+
+    for(int i = 0; i < 10000 ; i++)
+    {
+        yRot ++;
+        updateGL();
+    }
+
+    this->parentWidget()->move( x % (QApplication::desktop()->availableGeometry().width()-60),
+                               y % (QApplication::desktop()->availableGeometry().height()-60));
+
+}

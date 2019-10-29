@@ -6,6 +6,8 @@
 #include <QImage>
 #include <QDebug>
 
+#include <widgetmovethread.h>
+
 class QtSGLWidget: public QGLWidget
 {
     Q_OBJECT
@@ -33,6 +35,8 @@ protected:
     void wheelEvent(QWheelEvent*event);
 
 private:
+    GLfloat xWin, yWin;
+
     GLfloat xRot = 0, yRot = 0, zRot = 0;
     GLuint texture[3] = {0};
 
@@ -47,6 +51,12 @@ private:
     QPoint m_windowPoint;
 
     int moveXRot, moveYRot;
+
+    bool light = false;
+    bool blend = false;
+
+public slots:
+    void moveWidget(int x,int y);
 
 };
 
